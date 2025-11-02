@@ -1,0 +1,821 @@
+/* --- CSS Custom Properties (Theme) --- */
+:root {
+    /* REVERTED: Clean, dark theme */
+    --neon-blue: #007bff;
+    --neon-purple: #b400ff; /* Kept for subtle accents if needed */
+    --bg-dark: #0a0f1d;     /* Dark navy blue */
+    --bg-mid: #241b47;     /* Hint of violet */
+    --bg-light: #003366;     /* Deep blue */
+    --panel-glass: rgba(20, 30, 45, 0.75); /* More blue/gray panel */
+    --panel-glass-light: rgba(30, 40, 55, 0.7);
+    --border-glow: rgba(30, 100, 240, 0.25); /* Softer blue borders */
+    
+    --accent-red: #da3633;
+    --accent-green: #19C37D; /* Brighter Green */
+    --accent-orange: #f0883e;
+    --text-primary: #e6edf3;
+    --text-secondary: #7d8590;
+    
+    --font-main: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-title: var(--font-main); /* Reverted font */
+}
+
+/* --- Base & Layout --- */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html {
+    /* FIX: This element now holds the deep space gradient, ensuring it sits at the bottom. */
+    background-color: var(--bg-dark);
+    background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-mid) 100%);
+    min-height: 100vh; /* Ensures the background covers the viewport */
+}
+
+body {
+    font-family: var(--font-main);
+    /* NEW: Body background is removed/inherited, allowing stars to be visible. */
+    color: var(--text-primary);
+    margin: 0;
+    padding-top: 100px; /* Give space for sticky nav */
+    padding-bottom: 4rem;
+    overflow-x: hidden; 
+    /* The position: relative; was correctly removed in the previous step. */
+}
+
+/* --- Side Glows (Subtle) --- */
+.glow-edge-left, .glow-edge-right {
+    content: '';
+    position: fixed;
+    top: 0;
+    height: 100%;
+    width: 1px;
+    z-index: -5;
+    opacity: 0.3;
+}
+.glow-edge-left { 
+    left: 0; 
+    background: linear-gradient(to top, transparent, var(--neon-blue), transparent);
+}
+.glow-edge-right { 
+    right: 0; 
+    background: linear-gradient(to top, transparent, var(--neon-blue), transparent);
+}
+
+/* =======================================
+   CSS-ONLY STARFIELD BACKGROUND
+   ======================================= */
+        @keyframes pulse-glow-line {
+            from { opacity: 0.7; box-shadow: 0 0 10px var(--neon-blue); }
+            to { opacity: 1; box-shadow: 0 0 15px var(--neon-blue); }
+        }
+        
+        /* =======================================
+            NEW/MODIFIED STARFIELD CSS
+           ======================================= */
+        
+        /* NEW Parallax Keyframes 
+           Each layer drifts vertically at the same base speed (to loop)
+           but drifts horizontally at different speeds for depth.
+        */
+        @keyframes parallaxDriftFar {
+            from { transform: translateY(0vh) translateX(0vw); }
+            to   { transform: translateY(-100vh) translateX(-10vw); } 
+        }
+        @keyframes parallaxDriftMid {
+            from { transform: translateY(0vh) translateX(0vw); }
+            to   { transform: translateY(-100vh) translateX(-20vw); } 
+        }
+        @keyframes parallaxDriftNear {
+            from { transform: translateY(0vh) translateX(0vw); }
+            to   { transform: translateY(-100vh) translateX(-30vw); } 
+        }
+
+
+        #starfield-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            /* Container size ensures coverage, and we set the initial vertical offset */
+            width: 300%; 
+            height: 300vh; /* Using vh ensures this scales with viewport height */
+            /* Start position adjustment to ensure the visible screen area is covered by the 300% coordinates */
+            top: -100vh; /* Shift the 300vh field up one view-height */
+            left: -100%;
+            z-index: -9;
+            overflow: hidden;
+        }
+
+        #stars1, #stars2, #stars3 {
+            position: absolute;
+            /* FIX: The stars themselves are now positioned at the top of the 300vh container, 
+                  and the box-shadows define coordinates up to 300vh. */
+            top: 0;
+            left: 0;
+            /* Base size maintained for point-like appearance */
+            width: 0.1vw; 
+            height: 0.1vh;
+            background: transparent;
+            z-index: -10;
+        }
+
+        /* Layer 1: Far Layer - Smallest, slowest (Highest density, most subtle) */
+        #stars1 {
+            /* MODIFIED: Animation changed */
+            animation: parallaxDriftFar 200s linear infinite;
+            opacity: 0.9; 
+            /* The coordinates already span up to 300vh, filling the container's height. */
+            box-shadow: 
+                10vw 80vh 0.05vw #FFF, 15vw 95vh 0.05vw #FFF, 25vw 5vh 0.05vw var(--neon-blue), 35vw 75vh 0.05vw #FFF, 
+                45vw 25vh 0.05vw var(--neon-purple), 55vw 85vh 0.05vw #FFF, 65vw 35vh 0.05vw #FFF, 75vw 95vh 0.05vw var(--neon-blue), 
+                85vw 5vh 0.05vw #FFF, 95vw 65vh 0.05vw var(--neon-purple), 5vw 45vh 0.05vw #FFF, 20vw 15vh 0.05vw #FFF, 
+                30vw 85vh 0.05vw var(--neon-blue), 40vw 35vh 0.05vw #FFF, 50vw 95vh 0.05vw var(--neon-purple), 60vw 5vh 0.05vw #FFF, 
+                70vw 75vh 0.05vw #FFF, 80vw 25vh 0.05vw var(--neon-blue), 90vw 85vh 0.05vw #FFF, 0vw 35vh 0.05vw var(--neon-purple), 
+                15vw 60vh 0.05vw #FFF, 25vw 10vh 0.05vw #FFF, 35vw 80vh 0.05vw var(--neon-blue), 45vw 30vh 0.05vw #FFF, 
+                55vw 90vh 0.05vw var(--neon-purple), 65vw 40vh 0.05vw #FFF, 75vw 100vh 0.05vw #FFF, 85vw 50vh 0.05vw var(--neon-blue), 
+                95vw 0vh 0.05vw #FFF, 5vw 70vh 0.05vw var(--neon-purple), 20vw 20vh 0.05vw #FFF, 30vw 90vh 0.05vw #FFF, 
+                40vw 40vh 0.05vw var(--neon-blue), 50vw 0vh 0.05vw #FFF, 60vw 60vh 0.05vw var(--neon-purple), 70vw 10vh 0.05vw #FFF, 
+                80vw 80vh 0.05vw #FFF, 90vw 30vh 0.05vw var(--neon-blue), 0vw 90vh 0.05vw #FFF, 15vw 5vh 0.05vw var(--neon-purple),
+                10vw 85vh 0.05vw #FFF, 20vw 55vh 0.05vw var(--neon-blue), 30vw 10vh 0.05vw #FFF, 40vw 70vh 0.05vw var(--neon-purple),
+                50vw 30vh 0.05vw #FFF, 60vw 90vh 0.05vw #FFF, 70vw 40vh 0.05vw var(--neon-blue), 80vw 0vh 0.05vw #FFF,
+                90vw 60vh 0.05vw var(--neon-purple), 5vw 15vh 0.05vw #FFF, 25vw 45vh 0.05vw var(--neon-blue), 45vw 85vh 0.05vw #FFF,
+                65vw 15vh 0.05vw var(--neon-purple), 85vw 45vh 0.05vw #FFF, 5vw 95vh 0.05vw #FFF, 25vw 25vh 0.05vw var(--neon-blue),
+                45vw 65vh 0.05vw #FFF, 65vw 95vh 0.05vw var(--neon-purple), 85vw 25vh 0.05vw #FFF, 5vw 55vh 0.05vw #FFF,
+                25vw 55vh 0.05vw var(--neon-blue), 45vw 5vh 0.05vw #FFF, 65vw 65vh 0.05vw var(--neon-purple), 85vw 95vh 0.05vw #FFF,
+                10vw 25vh 0.05vw #FFF, 30vw 55vh 0.05vw var(--neon-blue), 50vw 85vh 0.05vw #FFF, 70vw 15vh 0.05vw var(--neon-purple),
+                90vw 45vh 0.05vw #FFF, 15vw 35vh 0.05vw #FFF, 35vw 75vh 0.05vw var(--neon-blue), 55vw 5vh 0.05vw #FFF,
+                75vw 65vh 0.05vw var(--neon-purple), 95vw 15vh 0.05vw #FFF, 10vw 65vh 0.05vw #FFF, 30vw 95vh 0.05vw var(--neon-blue),
+                50vw 45vh 0.05vw #FFF, 70vw 85vh 0.05vw var(--neon-purple), 90vw 5vh 0.05vw #FFF, 25vw 75vh 0.05vw #FFF,
+                45vw 15vh 0.05vw var(--neon-blue), 65vw 45vh 0.05vw #FFF, 85vw 85vh 0.05vw var(--neon-purple), 5vw 25vh 0.05vw #FFF,
+                25vw 95vh 0.05vw var(--neon-blue), 45vw 55vh 0.05vw #FFF, 65vw 5vh 0.05vw var(--neon-purple), 85vw 35vh 0.05vw #FFF,
+                1vw 10vh 0.05vw #FFF, 11vw 22vh 0.05vw var(--neon-blue), 21vw 34vh 0.05vw #FFF, 31vw 46vh 0.05vw var(--neon-purple),
+                41vw 58vh 0.05vw #FFF, 51vw 70vh 0.05vw #FFF, 61vw 82vh 0.05vw var(--neon-blue), 71vw 94vh 0.05vw #FFF,
+                81vw 6vh 0.05vw var(--neon-purple), 91vw 18vh 0.05vw #FFF, 2vw 28vh 0.05vw #FFF, 12vw 40vh 0.05vw var(--neon-blue),
+                22vw 52vh 0.05vw #FFF, 32vw 64vh 0.05vw var(--neon-purple), 42vw 76vh 0.05vw #FFF, 52vw 88vh 0.05vw #FFF,
+                62vw 0vh 0.05vw var(--neon-blue), 72vw 12vh 0.05vw #FFF, 82vw 24vh 0.05vw var(--neon-purple), 92vw 36vh 0.05vw #FFF,
+                3vw 48vh 0.05vw #FFF, 13vw 60vh 0.05vw var(--neon-blue), 23vw 72vh 0.05vw #FFF, 33vw 84vh 0.05vw var(--neon-purple),
+                43vw 96vh 0.05vw #FFF, 53vw 8vh 0.05vw #FFF, 63vw 20vh 0.05vw var(--neon-blue), 73vw 32vh 0.05vw #FFF,
+                83vw 44vh 0.05vw var(--neon-purple), 93vw 56vh 0.05vw #FFF, 4vw 68vh 0.05vw #FFF, 14vw 80vh 0.05vw var(--neon-blue),
+                24vw 92vh 0.05vw #FFF, 34vw 4vh 0.05vw var(--neon-purple), 44vw 16vh 0.05vw #FFF, 54vw 28vh 0.05vw #FFF,
+                64vw 40vh 0.05vw var(--neon-blue), 74vw 52vh 0.05vw #FFF, 84vw 64vh 0.05vw var(--neon-purple), 94vw 76vh 0.05vw #FFF,
+                /* Extra coordinates (now 100vh-300vh) shifted down to fill the 300vh height */
+                100vw 100vh 0.05vw #FFF, 110vw 120vh 0.05vw var(--neon-blue), 120vw 140vh 0.05vw #FFF, 130vw 160vh 0.05vw var(--neon-purple),
+                140vw 180vh 0.05vw #FFF, 150vw 200vh 0.05vw #FFF, 160vw 220vh 0.05vw var(--neon-blue), 170vw 240vh 0.05vw #FFF,
+                180vw 260vh 0.05vw var(--neon-purple), 190vw 280vh 0.05vw #FFF, 200vw 300vh 0.05vw #FFF, 210vw 100vh 0.05vw var(--neon-blue),
+                220vw 120vh 0.05vw #FFF, 230vw 140vh 0.05vw var(--neon-purple), 240vw 160vh 0.05vw #FFF, 250vw 180vh 0.05vw #FFF,
+                260vw 200vh 0.05vw var(--neon-blue), 270vw 220vh 0.05vw #FFF, 280vw 240vh 0.05vw var(--neon-purple), 290vw 260vh 0.05vw #FFF,
+                300vw 280vh 0.05vw #FFF, 100vw 200vh 0.05vw #FFF, 200vw 100vh 0.05vw var(--neon-blue), 150vw 150vh 0.05vw #FFF,
+                /* NEW DENSITY ADDITIONS (to reach ~700 stars in total) */
+                10vw 10vh 0.05vw #FFF, 20vw 20vh 0.05vw var(--neon-blue), 30vw 30vh 0.05vw #FFF, 40vw 40vh 0.05vw var(--neon-purple),
+                50vw 50vh 0.05vw #FFF, 60vw 60vh 0.05vw #FFF, 70vw 70vh 0.05vw var(--neon-blue), 80vw 80vh 0.05vw #FFF,
+                90vw 90vh 0.05vw var(--neon-purple), 100vw 110vh 0.05vw #FFF, 110vw 130vh 0.05vw #FFF, 120vw 150vh 0.05vw var(--neon-blue),
+                130vw 170vh 0.05vw #FFF, 140vw 190vh 0.05vw var(--neon-purple), 150vw 210vh 0.05vw #FFF, 160vw 230vh 0.05vw #FFF,
+                170vw 250vh 0.05vw var(--neon-blue), 180vw 270vh 0.05vw #FFF, 190vw 290vh 0.05vw var(--neon-purple), 200vw 10vh 0.05vw #FFF,
+                210vw 30vh 0.05vw #FFF, 220vw 50vh 0.05vw var(--neon-blue), 230vw 70vh 0.05vw #FFF, 240vw 90vh 0.05vw var(--neon-purple),
+                250vw 110vh 0.05vw #FFF, 260vw 130vh 0.05vw #FFF, 270vw 150vh 0.05vw var(--neon-blue), 280vw 170vh 0.05vw #FFF,
+                290vw 190vh 0.05vw var(--neon-purple), 300vw 210vh 0.05vw #FFF, 5vw 15vh 0.05vw #FFF, 15vw 35vh 0.05vw var(--neon-blue),
+                25vw 55vh 0.05vw #FFF, 35vw 75vh 0.05vw var(--neon-purple), 45vw 95vh 0.05vw #FFF, 55vw 115vh 0.05vw #FFF,
+                65vw 135vh 0.05vw var(--neon-blue), 75vw 155vh 0.05vw #FFF, 85vw 175vh 0.05vw var(--neon-purple), 95vw 195vh 0.05vw #FFF,
+                105vw 215vh 0.05vw #FFF, 115vw 235vh 0.05vw var(--neon-blue), 125vw 255vh 0.05vw #FFF, 135vw 275vh 0.05vw var(--neon-purple),
+                145vw 295vh 0.05vw #FFF, 155vw 15vh 0.05vw #FFF, 165vw 35vh 0.05vw var(--neon-blue), 175vw 55vh 0.05vw #FFF,
+                185vw 75vh 0.05vw var(--neon-purple), 195vw 95vh 0.05vw #FFF, 205vw 115vh 0.05vw #FFF, 215vw 135vh 0.05vw var(--neon-blue),
+                225vw 155vh 0.05vw #FFF, 235vw 175vh 0.05vw var(--neon-purple), 245vw 195vh 0.05vw #FFF, 255vw 215vh 0.05vw #FFF,
+                265vw 235vh 0.05vw var(--neon-blue), 275vw 255vh 0.05vw #FFF, 285vw 275vh 0.05vw var(--neon-purple), 295vw 295vh 0.05vw #FFF;
+        }
+
+        /* Layer 2: Mid Layer - Medium size, medium speed (Target: ~300 stars) */
+        #stars2 {
+            /* MODIFIED: Animation changed */
+            animation: parallaxDriftMid 120s linear infinite;
+            box-shadow: 
+                10vw 80vh 0.15vw #FFF, 20vw 95vh 0.15vw var(--neon-blue), 30vw 5vh 0.15vw #FFF, 40vw 75vh 0.15vw #FFF, 
+                50vw 25vh 0.15vw var(--neon-purple), 60vw 85vh 0.15vw #FFF, 70vw 35vh 0.15vw var(--neon-blue), 80vw 95vh 0.15vw #FFF, 
+                90vw 5vh 0.15vw var(--neon-purple), 0vw 65vh 0.15vw #FFF, 15vw 45vh 0.15vw #FFF, 35vw 15vh 0.15vw var(--neon-blue), 
+                55vw 85vh 0.15vw #FFF, 75vw 35vh 0.15vw var(--neon-purple), 95vw 95vh 0.15vw #FFF, 5vw 5vh 0.15vw #FFF, 
+                25vw 75vh 0.15vw var(--neon-blue), 45vw 25vh 0.15vw #FFF, 65vw 85vh 0.15vw var(--neon-purple), 85vw 35vh 0.15vw #FFF, 
+                5vw 60vh 0.15vw #FFF, 15vw 10vh 0.15vw var(--neon-blue), 25vw 80vh 0.15vw #FFF, 35vw 30vh 0.15vw #FFF, 
+                45vw 90vh 0.15vw var(--neon-purple), 55vw 40vh 0.15vw #FFF, 65vw 100vh 0.15vw var(--neon-blue), 75vw 50vh 0.15vw #FFF, 
+                85vw 0vh 0.15vw var(--neon-purple), 95vw 70vh 0.15vw #FFF, 10vw 20vh 0.15vw #FFF, 30vw 90vh 0.15vw var(--neon-blue), 
+                50vw 40vh 0.15vw #FFF, 70vw 0vh 0.15vw var(--neon-purple), 90vw 60vh 0.15vw #FFF, 5vw 15vh 0.15vw #FFF,
+                25vw 45vh 0.15vw var(--neon-blue), 45vw 85vh 0.15vw #FFF, 65vw 15vh 0.15vw var(--neon-purple), 85vw 45vh 0.15vw #FFF,
+                10vw 50vh 0.15vw #FFF, 30vw 100vh 0.15vw var(--neon-blue), 50vw 55vh 0.15vw #FFF, 70vw 5vh 0.15vw var(--neon-purple),
+                90vw 70vh 0.15vw #FFF, 15vw 25vh 0.15vw #FFF, 35vw 45vh 0.15vw var(--neon-blue), 55vw 65vh 0.15vw #FFF,
+                75vw 85vh 0.15vw var(--neon-purple), 95vw 55vh 0.15vw #FFF, 10vw 35vh 0.15vw #FFF, 30vw 65vh 0.15vw var(--neon-blue),
+                100vw 100vh 0.15vw #FFF, 110vw 120vh 0.15vw var(--neon-blue), 120vw 140vh 0.15vw #FFF, 130vw 160vh 0.15vw var(--neon-purple),
+                140vw 180vh 0.15vw #FFF, 150vw 200vh 0.15vw #FFF, 160vw 220vh 0.15vw var(--neon-blue), 170vw 240vh 0.15vw #FFF,
+                180vw 260vh 0.15vw var(--neon-purple), 190vw 280vh 0.15vw #FFF, 200vw 300vh 0.15vw #FFF, 210vw 100vh 0.15vw var(--neon-blue),
+                220vw 120vh 0.15vw #FFF, 230vw 140vh 0.15vw var(--neon-purple), 240vw 160vh 0.15vw #FFF, 250vw 180vh 0.15vw #FFF,
+                260vw 200vh 0.15vw var(--neon-blue), 270vw 220vh 0.15vw #FFF, 280vw 240vh 0.15vw var(--neon-purple), 290vw 260vh 0.15vw #FFF,
+                300vw 280vh 0.15vw #FFF, 100vw 200vh 0.15vw #FFF, 200vw 100vh 0.15vw var(--neon-blue), 150vw 150vh 0.15vw #FFF,
+                /* NEW DENSITY ADDITIONS (to reach ~300 stars in total) */
+                10vw 10vh 0.15vw #FFF, 20vw 20vh 0.15vw var(--neon-blue), 30vw 30vh 0.15vw #FFF, 40vw 40vh 0.15vw var(--neon-purple),
+                50vw 50vh 0.15vw #FFF, 60vw 60vh 0.15vw #FFF, 70vw 70vh 0.15vw var(--neon-blue), 80vw 80vh 0.15vw #FFF,
+                90vw 90vh 0.15vw var(--neon-purple), 100vw 110vh 0.15vw #FFF, 110vw 130vh 0.15vw #FFF, 120vw 150vh 0.15vw var(--neon-blue),
+                130vw 170vh 0.15vw #FFF, 140vw 190vh 0.15vw var(--neon-purple), 150vw 210vh 0.15vw #FFF, 160vw 230vh 0.15vw #FFF,
+                170vw 250vh 0.15vw var(--neon-blue), 180vw 270vh 0.15vw #FFF, 190vw 290vh 0.15vw var(--neon-purple), 200vw 10vh 0.15vw #FFF,
+                210vw 30vh 0.15vw #FFF, 220vw 50vh 0.15vw var(--neon-blue), 230vw 70vh 0.15vw #FFF, 240vw 90vh 0.15vw var(--neon-purple),
+                250vw 110vh 0.15vw #FFF, 260vw 130vh 0.15vw #FFF, 270vw 150vh 0.15vw var(--neon-blue), 280vw 170vh 0.15vw #FFF,
+                290vw 190vh 0.15vw var(--neon-purple), 300vw 210vh 0.15vw #FFF;
+        }
+
+        /* Layer 3: Near Layer - Largest, fastest (closest, Target: ~150 stars) */
+        #stars3 {
+            /* MODIFIED: Animation changed */
+            animation: parallaxDriftNear 80s linear infinite;
+            box-shadow: 
+                15vw 85vh 0.25vw var(--neon-purple), 25vw 15vh 0.25vw #FFF, 35vw 75vh 0.25vw var(--neon-purple), 45vw 5vh 0.25vw #FFF, 
+                55vw 65vh 0.25vw var(--neon-purple), 65vw 95vh 0.25vw #FFF, 75vw 25vh 0.25vw var(--neon-blue), 85vw 85vh 0.25vw #FFF, 
+                95vw 35vh 0.25vw var(--neon-purple), 5vw 55vh 0.25vw #FFF, 20vw 5vh 0.25vw #FFF, 40vw 45vh 0.25vw var(--neon-purple), 
+                60vw 85vh 0.25vw #FFF, 80vw 15vh 0.25vw var(--neon-blue), 10vw 95vh 0.25vw #FFF, 30vw 25vh 0.25vw var(--neon-purple), 
+                50vw 75vh 0.25vw #FFF, 70vw 55vh 0.25vw var(--neon-blue), 90vw 5vh 0.25vw #FFF, 5vw 35vh 0.25vw var(--neon-purple),
+                25vw 65vh 0.25vw #FFF, 45vw 95vh 0.25vw var(--neon-blue), 65vw 55vh 0.25vw #FFF, 85vw 5vh 0.25vw var(--neon-purple),
+                10vw 45vh 0.25vw #FFF, 30vw 85vh 0.25vw var(--neon-blue), 50vw 15vh 0.25vw #FFF, 70vw 35vh 0.25vw var(--neon-purple),
+                15vw 50vh 0.25vw #FFF, 35vw 90vh 0.25vw var(--neon-blue), 55vw 20vh 0.25vw #FFF, 75vw 40vh 0.25vw var(--neon-purple),
+                100vw 100vh 0.25vw #FFF, 110vw 120vh 0.25vw var(--neon-blue), 120vw 140vh 0.25vw #FFF, 130vw 160vh 0.25vw var(--neon-purple),
+                140vw 180vh 0.25vw #FFF, 150vw 200vh 0.25vw #FFF, 160vw 220vh 0.25vw var(--neon-blue), 170vw 240vh 0.25vw #FFF,
+                180vw 260vh 0.25vw var(--neon-purple), 190vw 280vh 0.25vw #FFF, 200vw 300vh 0.25vw #FFF, 210vw 100vh 0.25vw var(--neon-blue),
+                220vw 120vh 0.25vw #FFF, 230vw 140vh 0.25vw var(--neon-purple), 240vw 160vh 0.25vw #FFF, 250vw 180vh 0.25vw #FFF,
+                260vw 200vh 0.25vw var(--neon-blue), 270vw 220vh 0.25vw #FFF, 280vw 240vh 0.25vw var(--neon-purple), 290vw 260vh 0.25vw #FFF,
+                300vw 280vh 0.25vw #FFF, 100vw 200vh 0.25vw #FFF, 200vw 100vh 0.25vw var(--neon-blue), 150vw 150vh 0.25vw #FFF,
+                /* NEW DENSITY ADDITIONS (to reach ~150 stars in total) */
+                10vw 10vh 0.25vw #FFF, 20vw 20vh 0.25vw var(--neon-blue), 30vw 30vh 0.25vw #FFF, 40vw 40vh 0.25vw var(--neon-purple),
+                50vw 50vh 0.25vw #FFF, 60vw 60vh 0.25vw #FFF, 70vw 70vh 0.25vw var(--neon-blue), 80vw 80vh 0.25vw #FFF,
+                90vw 90vh 0.25vw var(--neon-purple), 100vw 110vh 0.25vw #FFF, 110vw 130vh 0.25vw #FFF, 120vw 150vh 0.25vw var(--neon-blue),
+                130vw 170vh 0.25vw #FFF, 140vw 190vh 0.25vw var(--neon-purple), 150vw 210vh 0.25vw #FFF, 160vw 230vh 0.25vw #FFF,
+                170vw 250vh 0.25vw var(--neon-blue), 180vw 270vh 0.25vw #FFF, 190vw 290vh 0.25vw var(--neon-purple), 200vw 10vh 0.25vw #FFF;
+        }
+
+@media (prefers-reduced-motion: reduce) {
+    /* Stop star motion */
+    #stars1, #stars2, #stars3 {
+        animation: none;
+    }
+}
+
+
+.container {
+    width: 100%;
+    max-width: 900px; 
+    margin: 0 auto;
+    padding: 1rem;
+    position: relative;
+    z-index: 2;
+}
+
+/* --- FROSTED-GLASS PANEL --- */
+.panel {
+    background-color: var(--panel-glass); 
+    border: 1px solid var(--border-glow);
+    border-radius: 12px;
+    padding: 1.5rem 2rem;
+    /* REVERTED: Simpler, softer shadow */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 
+                0 0 20px var(--border-glow);
+    backdrop-filter: blur(6px); 
+    -webkit-backdrop-filter: blur(6px);
+    transition: all 0.25s ease;
+}
+.panel:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5), 
+                0 0 25px rgba(0, 123, 255, 0.4);
+    border-color: rgba(0, 123, 255, 0.4); 
+}
+
+.panel-label {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1.5px; 
+    margin-bottom: 1rem;
+}
+
+/* --- Main Nav Bar (Scroll-Aware) --- */
+.main-nav {
+    position: sticky;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 100;
+    background-color: rgba(13, 17, 23, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-glow);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    transition: transform 0.4s ease-in-out;
+    transform: translateY(0);
+}
+
+.main-nav.nav-hidden {
+    transform: translateY(-100%);
+}
+
+.nav-links {
+    display: flex;
+    gap: 1rem;
+}
+
+/* === START: UPDATED NAV BUTTONS === */
+.nav-links button.nav-link {
+    font-family: var(--font-main);
+    font-size: 1rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary); /* Default: muted text */
+    text-decoration: none;
+    padding: 0.75rem 1.25rem; /* Padding for a button feel */
+    border-radius: 8px; /* Match panel rounded corners */
+    position: relative;
+    transition: color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    cursor: pointer;
+    
+    /* Integrated look: transparent background and border */
+    background: none;
+    border: 1px solid transparent; /* Keep space for the border on active */
+    box-shadow: none;
+}
+
+/* Hover effect for any non-active button */
+.nav-links button.nav-link:hover {
+    color: var(--text-primary);
+    background-color: var(--border-glow); /* Subtle glow background on hover */
+    text-shadow: none;
+}
+
+/* Style for the ACTIVE button */
+.nav-links button.nav-link.active {
+    color: var(--text-primary);
+    font-weight: 700;
+
+    /* Apply the "glass panel" style */
+    background-color: var(--panel-glass); 
+    border: 1px solid var(--border-glow);
+    box-shadow: 0 0 15px var(--border-glow); /* Neon glow */
+    
+    /* Optional: make the text itself glow slightly */
+    text-shadow: 0 0 8px var(--neon-blue);
+}
+
+/* We don't need the '::after' underline anymore, so this ensures it's gone */
+.nav-links button.nav-link.active::after {
+    content: none; 
+}
+/* === END: UPDATED NAV BUTTONS === */
+
+
+/* --- Header (Logo & Title) --- */
+.header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+}
+
+/* --- PULSING LOGO --- */
+.logo {
+    width: 120px; 
+    height: auto;
+    margin-bottom: 1.5rem;
+    opacity: 0.9;
+    filter: drop-shadow(0 0 15px var(--neon-blue));
+    animation: pulse-logo 4s infinite alternate ease-in-out;
+}
+@keyframes pulse-logo {
+    from {
+        opacity: 0.8;
+        filter: drop-shadow(0 0 15px var(--neon-blue));
+        transform: scale(1);
+    }
+    to {
+        opacity: 1;
+        filter: drop-shadow(0 0 30px var(--neon-blue));
+        transform: scale(1.03);
+    }
+}
+/* Fallback for logo */
+#logo-fallback {
+    display: none;
+    width: 120px; 
+    height: 120px; 
+    border: 2px solid var(--neon-blue); 
+    border-radius: 50%; 
+    align-items: center; 
+    justify-content: center; 
+    margin: 0 auto 1.5rem auto; 
+    font-family: var(--font-title); 
+    font-size: 2.5rem; 
+    font-weight: 900;
+    color: var(--neon-blue); 
+    text-shadow: 0 0 8px var(--neon-blue);
+    animation: pulse-logo 4s infinite alternate ease-in-out;
+}
+
+
+.header h1 {
+    font-family: var(--font-main); /* Reverted font */
+    font-size: 2.75rem;
+    font-weight: 900;
+    color: var(--text-primary);
+    margin: 0;
+    letter-spacing: 1px;
+    text-shadow: 0 0 10px rgba(0, 123, 255, 0.5); /* Subtle glow */
+}
+.header .subtitle {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 2px; 
+    margin: 0.5rem 0 0 0;
+}
+
+/* --- Main Status Panel --- */
+.status-panel {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+.status-display {
+    font-family: var(--font-main); /* Reverted font */
+    font-size: 3rem;
+    font-weight: 900;
+    padding: 0.5rem 0;
+    text-transform: uppercase;
+    transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+/* Dynamic Status Colors (Kept) */
+.status-SCOUTING { color: var(--accent-green); text-shadow: 0 0 12px var(--accent-green), 0 0 20px var(--accent-green); }
+.status-AVOIDING_OBSTACLE { color: var(--neon-blue); text-shadow: 0 0 12px var(--neon-blue), 0 0 20px var(--neon-blue); }
+.status-LOW_BATTERY { color: var(--accent-red); text-shadow: 0 0 12px var(--accent-red), 0 0 20px var(--accent-red); }
+.status-INITIALIZING { color: var(--accent-orange); text-shadow: 0 0 12px var(--accent-orange), 0 0 20px var(--accent-orange); }
+.status-DISCONNECTED { color: var(--accent-red); text-shadow: 0 0 12px var(--accent-red), 0 0 20px var(--accent-red); }
+.status-PAUSED { color: var(--accent-orange); text-shadow: 0 0 12px var(--accent-orange), 0 0 20px var(--accent-orange); }
+.status-RETURN_HOME { color: var(--neon-blue); text-shadow: 0 0 12px var(--neon-blue), 0 0 20px var(--neon-blue); }
+.status-SHUTDOWN { color: var(--text-secondary); text-shadow: none; }
+
+/* --- Stats Grid (Responsive) --- */
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+@media (min-width: 600px) {
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+.stat-card {
+    text-align: center;
+}
+.stat-card .value {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.1;
+}
+.stat-card .unit {
+    font-size: 1.5rem;
+    font-weight: 400;
+    color: var(--text-secondary);
+    margin-left: 0.5rem;
+}
+
+/* --- DYNAMIC BATTERY ICON STYLES (Kept) --- */
+.battery-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding-top: 0.5rem; 
+}
+.battery-icon {
+    width: 70px;
+    height: 35px;
+    border: 3px solid var(--text-secondary);
+    border-radius: 8px;
+    position: relative;
+    padding: 3px;
+}
+.battery-icon::after { /* The little nub on the end */
+    content: '';
+    position: absolute;
+    right: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 5px;
+    height: 12px;
+    background-color: var(--text-secondary);
+    border-radius: 0 3px 3px 0;
+}
+.battery-fill {
+    height: 100%;
+    width: 100%; /* Default to full */
+    border-radius: 3px;
+    background-color: var(--accent-green);
+    /* Smooth transition for width and color changes */
+    transition: width 0.5s ease-out, background-color 0.5s ease;
+}
+.battery-value {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.1;
+}
+
+
+/* --- MISSION CONTROL BUTTONS (Reverted Style) --- */
+.mission-control-panel {
+    text-align: center;
+    margin-top: 2rem;
+}
+.control-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr; 
+    gap: 1.5rem; 
+}
+@media (min-width: 600px) {
+    .control-buttons {
+        /* 4-column layout, AI button removed */
+        grid-template-columns: repeat(4, 1fr); 
+    }
+}
+
+.control-btn {
+    font-family: var(--font-main); 
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.5px; 
+    color: var(--text-secondary); /* Muted text */
+    background-color: transparent;
+    border: 1px solid var(--border-glow);
+    border-radius: 10px;
+    padding: 1rem 0.75rem;
+    cursor: pointer;
+    position: relative;
+    z-index: 1;
+    transition: all 0.25s ease;
+    box-shadow: 0 0 10px var(--border-glow);
+}
+
+.control-btn:hover {
+    color: var(--text-primary);
+    transform: scale(1.03) translateY(-2px); /* Grow */
+    background-color: rgba(30, 100, 240, 0.1); /* Soft blue bg */
+    border-color: var(--neon-blue);
+    box-shadow: 0 0 15px var(--neon-blue), 0 0 25px var(--neon-blue); /* Stronger glow */
+}
+
+.control-btn:active {
+    transform: translateY(0) scale(0.98); /* Pressed-in effect */
+    box-shadow: 0 0 10px var(--neon-blue), inset 0 0 15px var(--border-glow); /* Inner shadow */
+}
+
+/* For JS to show active command */
+.control-btn.active-command {
+    color: var(--text-primary);
+    background-color: rgba(30, 100, 240, 0.2);
+    border-color: var(--neon-blue);
+    box-shadow: 0 0 15px var(--neon-blue), 0 0 25px var(--neon-blue);
+}
+
+
+/* Special button colors (kept subtle) */
+.control-btn[data-command="SHUTDOWN"]:hover,
+.control-btn[data-command="SHUTDOWN"].active-command {
+    background-color: rgba(218, 54, 51, 0.1);
+    border-color: var(--accent-red);
+    box-shadow: 0 0 15px var(--accent-red);
+    color: var(--accent-red);
+}
+
+/* --- "About" Page Specific Styles --- */
+.about-content {
+    padding: 2rem 2.5rem;
+    background-color: var(--panel-glass-light); /* Lighter panel */
+    position: relative;
+    overflow: hidden; /* Needed for the side glow */
+}
+
+/* Vertical glowing accent line (Kept) */
+.about-content::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(to top, var(--neon-purple), var(--neon-blue));
+    box-shadow: 0 0 15px var(--neon-blue), 0 0 20px var(--neon-purple);
+    animation: pulse-logo-line 4s infinite alternate;
+}
+@keyframes pulse-logo-line {
+    from { opacity: 0.5; box-shadow: 0 0 10px var(--neon-purple); }
+    to   { opacity: 1; box-shadow: 0 0 15px var(--neon-blue); }
+}
+
+.about-header, .telemetry-header {
+    font-family: var(--font-main); /* Reverted font */
+    font-weight: 900;
+    color: var(--text-primary);
+    position: relative;
+    display: inline-block;
+    margin-bottom: 1.5rem;
+    text-shadow: 0 0 8px var(--neon-blue); /* Subtle glow */
+}
+.about-header {
+    font-size: 2.25rem;
+}
+ /* Glowing underline (Subtler) */
+.about-header::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 0;
+    width: 75%; 
+    height: 3px;
+    background: var(--neon-blue);
+    box-shadow: 0 0 10px var(--neon-blue);
+    animation: pulse-glow-line 3s infinite alternate;
+}
+@keyframes pulse-glow-line {
+    from { opacity: 0.7; box-shadow: 0 0 10px var(--neon-blue); }
+    to { opacity: 1; box-shadow: 0 0 15px var(--neon-blue); }
+}
+
+.about-content p {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: var(--text-secondary);
+}
+.about-content p strong {
+    color: var(--text-primary);
+    font-weight: 700;
+    text-shadow: 0 0 5px var(--neon-blue);
+}
+
+.telemetry-header {
+    font-size: 1.5rem;
+    margin-top: 3rem;
+    border-bottom: 1px solid var(--border-glow);
+    padding-bottom: 0.5rem;
+}
+.telemetry-list {
+    list-style: none;
+    padding-left: 0;
+    font-size: 1rem;
+    line-height: 1.8;
+    color: var(--text-secondary);
+}
+.telemetry-list li {
+    position: relative;
+    padding-left: 1.75rem;
+    margin-bottom: 1rem;
+}
+/* Futuristic bullet */
+.telemetry-list li::before {
+    content: '>';
+    position: absolute;
+    left: 0;
+    top: 0;
+    font-weight: 900;
+    font-size: 1.2rem;
+    color: var(--neon-blue);
+    text-shadow: 0 0 8px var(--neon-blue);
+}
+
+
+/* ================================================== */
+/* === START: NEW TEAM SECTION STYLES === */
+/* ================================================== */
+
+/* --- "Team" Section Styles --- */
+.team-panel {
+    margin-top: 2rem; /* Add space between "About" and "Team" panels */
+}
+
+.team-grid {
+    display: grid;
+    /* Creates a responsive grid that fits as many ~250px cards as it can */
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem; /* Space from the "Meet The Team" header */
+}
+
+.team-member-card {
+    /* A "mini-panel" look using your theme variables */
+    background-color: var(--panel-glass-light);
+    border: 1px solid var(--border-glow);
+    border-radius: 8px; /* Slightly smaller radius for cards */
+    padding: 1.5rem;
+    box-shadow: 0 0 10px var(--border-glow);
+    transition: all 0.25s ease;
+}
+
+.team-member-card:hover {
+    /* Matches the main panel hover effect */
+    transform: translateY(-3px);
+    border-color: var(--neon-blue);
+    box-shadow: 0 0 15px var(--neon-blue), 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.team-member-card h3 {
+    font-family: var(--font-main);
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    /* Subtle glow to match the theme */
+    text-shadow: 0 0 5px var(--neon-blue);
+    margin: 0 0 0.5rem 0; /* Reset margin */
+}
+
+.team-member-card p {
+    font-family: var(--font-main);
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0; /* Reset margin */
+}
+
+/* ================================================== */
+/* === END: NEW TEAM SECTION STYLES === */
+/* ================================================== */
+
+
+/* --- Footer --- */
+.footer {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-top: 2rem;
+    border-top: 1px solid var(--border-glow);
+}
+
+/* --- Toast Notification (for commands) --- */
+.toast-notification {
+    position: fixed;
+    bottom: -100px; /* Start off-screen */
+    left: 50%;
+    transform: translateX(-50%);
+    /* Frosted-glass toast */
+    background-color: var(--panel-glass);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    
+    color: var(--text-primary);
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    border: 1px solid var(--neon-blue);
+    box-shadow: 0 0 20px var(--neon-blue);
+    z-index: 1001;
+    font-weight: 700;
+    transition: bottom 0.5s ease-in-out;
+}
+.toast-notification.show {
+    bottom: 20px; /* Slide in */
+}
+
+/* --- Data Change Animation --- */
+@keyframes data-fade-in {
+    from { opacity: 0.3; }
+    to { opacity: 1; }
+}
+.data-flash {
+    animation: data-fade-in 0.4s ease-out;
+}
+
+/* --- Page Load Animations --- */
+.animated-item {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fade-in-up 0.6s ease-out forwards;
+}
+
+@keyframes fade-in-up {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* --- Accessibility --- */
+@media (prefers-reduced-motion: reduce) {
+    /* Turn off all non-essential animations */
+    .animated-item,
+    .page,
+    .main-nav,
+    .panel,
+    .control-btn,
+    .logo,
+    .about-header::after {
+        animation: none;
+        transition: none;
+    }
+    
+    /* Keep the starfield, but stop its movement */
+    #stars1, #stars2, #stars3 {
+        animation: none;
+    }
+}

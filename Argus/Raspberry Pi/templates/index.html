@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project ARGUS - Live Dashboard</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        /* ----------------------------------------------------------------- */
+        /* --- FIXED LAYOUT AND SWITCHING CSS (CRITICAL FIXES HERE) --- */
+        /* ----------------------------------------------------------------- */
+        
+        /* FIX 1: Adjust body padding to compensate for the fixed navbar's height */
+        body {
+            /* Navbar height is approx 58px. Use 80px for safe padding below the fixed bar. */
+            padding-top: 80px; 
+            padding-bottom: 4rem; 
+            position: relative;
+        }
+
+        /* --- FIXED NAVIGATION BAR CONTAINER (CRITICAL FIX) --- */
+        .main-nav {
+            /* FIX 2: Set definitively to FIXED position at the top edge */
+            position: fixed; 
+            top: 0; /* Attach to the top of the viewport */
+            left: 0;
+            width: 100%;
+            z-index: 1000; /* Ensure it stays above everything */
+            
+            /* Background and style properties retained/consolidated */
+            background-color: rgba(13, 17, 23, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-glow);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+            padding: 0.75rem 1rem; /* Defines height */
+            
+            /* Set to RELATIVE for internal absolute beam positioning */
+            position: relative; 
+            
+            /* Added transition for smooth slide down/up */
+            transition: transform 0.4s ease-in-out, opacity 0.3s ease-in-out;
+            will-change: transform, opacity;
+            
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden; /* Contains the beam's absolute position */
+        }
+        
+        /* Hiding state: Slides the entire unit up */
+        .main-nav.nav-hidden {
+             /* FIX: Slide completely out of view */
+             transform: translateY(-100%); 
+             opacity: 0; /* Fades out when hidden */
+        }
+        
+        /* Nav Links container to centralize content */
+        .nav-links {
+            display: flex;
+            /* MODIFICATION: Switched to space-between and full width */
+            justify-content: space-between;
+            width: 100%;
+            max-width: 900px; /* Constrain the max width for balance */
+            gap: 1.5rem; 
+            align-items: center;
+        }
+
+        /* NEW: Styles for the nav groups */
+        .nav-group {
+            display: flex;
+            gap: 1.5rem; /* Gap *within* groups */
+            align-items: center;
+        }
+        
+        .nav-group-left {
+            justify-content: flex-end;
+            flex: 1; /* Allow group to grow */
+        }
+        
+        .nav-group-right {
+            justify-content: flex-start;
+            flex: 1; /* Allow group to grow */
+        }
+        
+        /* Ensure "Home" link doesn't shrink and stays centered */
+        .nav-links > .nav-link[data-page="page-home"] {
+            flex-shrink: 0;
+        }
+
+
+        /* FIX: Container holds absolute children and sets initial visual spacing */
+        .container {
+            min-height: 100vh;
+            position: relative; 
+            padding-top: 4rem; 
+        }
+
+        /* FIX: Visibility and Stacking Context for Pages */
+        .page {
+            position: absolute; 
+            left: 0;
+            width: 100%;
+            min-height: 100vh;
+            top: 4rem; 
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(15px);
+            transition: opacity 0.4s ease, transform 0.4s ease; 
+            z-index: 1; 
+        }
+
+        .page.active {
+            opacity: 1;
+            pointer-events: all;
+            transform: translateY(0);
+            z-index: 2;
+        }
+
+        /* Override the old page load animation for dynamic switching */
+        .page .animated-item {
+            animation: none !important;
+            opacity: 1 !important;
+            transform: none !important;
+        }
+
+        /* Ensure starfield is deep background */
+        #starfield-background {
+            z-index: -5 !important; 
+        }
+        
+        /* --- HOME SECTION SPECIFIC STYLES --- */
+        .home-motto {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--neon-blue);
+            text-shadow: 0 0 10px rgba(0, 123, 255, 0.6);
+            margin-bottom: 1.5rem; /* MODIFIED: Was 1rem */
+            letter-spacing: 0.5px;
+            line-height: 1.4; /* ADDED */
+        }
+        
+        .home-tagline {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 3rem;
+            margin-top: 1.5rem; /* ADDED */
+            line-height: 1.6; /* ADDED */
+        }
+
+        .mission-vision-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        @media (min-width: 600px) {
+            .mission-vision-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .home-panel-title {
+            font-weight: 700;
+            color: var(--accent-orange);
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+        
+        /* === NEW CINEMATIC HOME STYLES === */
+        
+        /* 1. Animations */
+        @keyframes rotateAura {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        @keyframes fadeInSlideLeft {
+            from { opacity: 0; transform: translateX(-50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes fadeInSlideRight {
+            from { opacity: 0; transform: translateX(50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 15px rgba(180, 0, 255, 0.4); }
+            50% { box-shadow: 0 0 30px rgba(180, 0, 255, 0.8); }
+            100% { box-shadow: 0 0 15px rgba(180, 0, 255, 0.4); }
+        }
+        @keyframes glowBorderPulse {
+            0% { border-color: rgba(30, 100, 240, 0.4); }
+            100% { border-color: rgba(0, 123, 255, 0.8); }
+        }
+        @keyframes slowRotate {
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        @keyframes pulseSoft {
+            0%, 100% { filter: drop-shadow(0 0 5px rgba(0, 123, 255, 0.4)); opacity: 0.8; }
+            50% { filter: drop-shadow(0 0 15px rgba(0, 123, 255, 0.8)); opacity: 1; }
+        }
+        @keyframes zeroGravityFloat1 {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(15px, -20px) scale(1.02); }
+            100% { transform: translate(0, 0) scale(1); }
+        }
+        @keyframes zeroGravityFloat2 {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-10px, 30px) scale(0.98); }
+            100% { transform: translate(0, 0) scale(1); }
+        }
+        @keyframes beamMove {
+            0% { background-position: 0% 0; }
+            100% { background-position: 200% 0; }
+        }
+        @keyframes beamPulse {
+            0% { box-shadow: 0 0 5px rgba(0,255,255,0.4); }
+            50% { box-shadow: 0 0 20px rgba(0,255,255,0.8); }
+            100% { box-shadow: 0 0 5px rgba(0,255,255,0.4); }
+        }
+        
+        /* 2. Layout (Use flex for dynamic centering and spacing) */
+        .home-layout {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            max-width: 1000px; /* Increased max width for cinematic feel */
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        /* 3. Logo Aura (Cinematic Intro) */
+        
+        /* NEW: Wrapper for link -- REMOVED */
+        .home-logo-link {
+           display: none;
+        }
+
+        /* NEW: Home title text -- REMOVED */
+        .home-title-text {
+           display: none;
+        }
+        
+        /* Modified .logo-wrapper */
+        .logo-wrapper {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 3rem auto; /* Reverted margin */
+            animation: fadeInSlideLeft 1s ease-out forwards; /* REVERTED */
+            animation-delay: 0.2s !important; /* REVERTED */
+            opacity: 0; /* REVERTED */
+            z-index: 10;
+        }
+        
+        /* Add hover effects -- REMOVED */
+        .home-logo-link:hover .home-title-text {
+            /* styles removed */
+        }
+        
+        .home-logo-link .logo {
+            /* styles removed */
+        }
+        
+        .home-logo-link:hover .logo {
+            /* styles removed */
+        }
+
+        .logo-aura {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: -20px;
+            width: 190px;
+            height: 190px;
+            border: 2px solid var(--neon-blue);
+            border-radius: 50%;
+            opacity: 0.2;
+            animation: rotateAura 60s linear infinite;
+        }
+        
+        /* 4. Cinematic Text */
+        .cinematic-header {
+            opacity: 0;
+            animation: fadeInSlideLeft 1s ease-out forwards;
+            animation-delay: 0.5s !important;
+            text-shadow: 0 0 15px rgba(0, 123, 255, 0.4);
+            margin-top: 0;
+            margin-bottom: 2.5rem;
+        }
+        
+        .home-main-title {
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: var(--text-primary);
+            text-shadow: 0 0 15px rgba(0, 123, 255, 0.6);
+            margin: 0;
+            letter-spacing: 2px;
+            line-height: 1.3; /* ADDED */
+        }
+
+        /* 5. Mission/Vision Panels (Sliding from Right) */
+        .mission-vision-grid {
+            animation: fadeInSlideRight 1s ease-out forwards;
+            animation-delay: 0.8s !important;
+            opacity: 0;
+        }
+        
+        /* Custom Panel Styling for Home Section */
+        .directive-panel {
+            min-height: 200px; /* Increased minimum height for grander presence */
+            padding: 2.5rem;
+            animation: pulseGlow 4s infinite alternate ease-in-out;
+            border: 2px solid; /* Make border stronger */
+            border-image: linear-gradient(to right, var(--neon-purple), var(--neon-blue)) 1;
+            box-shadow: 0 0 20px rgba(0, 123, 255, 0.3);
+            text-align: left;
+        }
+        .directive-panel p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+        .directive-panel .home-panel-title {
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            text-shadow: 0 0 5px var(--accent-orange);
+        }
+        
+        /* 6. Launch Sequence Panel */
+        #launch-sequence-panel {
+            margin-top: 5rem;
+            padding: 2.5rem 3rem;
+            border: 1px solid var(--neon-purple);
+            box-shadow: 0 0 15px rgba(180, 0, 255, 0.6);
+            animation: glowBorderPulse 3s infinite alternate; /* New border pulse animation */
+            width: 100%;
+            max-width: 450px;
+            opacity: 0;
+            transition: opacity 0.5s ease-out;
+        }
+        
+        .launch-status {
+            font-family: monospace;
+            color: var(--accent-green);
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+            height: 1.5em; /* Prevent layout shift */
+        }
+        
+        /* Loading Ring Effect */
+        .launch-ring {
+            border: 4px solid rgba(0, 123, 255, 0.2);
+            border-top: 4px solid var(--neon-blue);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Custom Button Style for Launch */
+        .launch-btn {
+            font-size: 1.2rem;
+            padding: 1rem 2rem;
+            letter-spacing: 2px;
+            border-color: var(--neon-blue);
+            text-shadow: 0 0 8px var(--neon-blue);
+        }
+
+        /* --- DELETED CORE EMBLEM STYLES --- */
+        #argus-core-emblem {
+            /* This element is deleted from HTML, but we keep the style block clean */
+            display: none; 
+        }
+        
+        /* --- NEW PLANET STYLES --- */
+        .cosmic-planet {
+            position: fixed;
+            z-index: -6; /* Behind argus-core-emblem (z-index: 0) and starfield (z-index: -5) */
+            opacity: 0.3; 
+            transition: transform 0.1s ease;
+            /* Added glow for immersion */
+            filter: drop-shadow(0 0 15px rgba(0, 123, 255, 0.2)) saturate(1.2); 
+            
+            will-change: transform; 
+        }
+
+        #planet-saturn {
+            top: 5%;
+            right: 0%;
+            width: 300px; /* Base size */
+            animation: zeroGravityFloat1 25s ease-in-out infinite alternate;
+        }
+
+        #planet-mars {
+            bottom: 5%;
+            left: 0%;
+            width: 200px; /* Base size */
+            animation: zeroGravityFloat2 20s ease-in-out infinite alternate;
+        }
+        
+        @media (max-width: 768px) {
+            #planet-saturn {
+                width: 150px;
+                right: -50px;
+            }
+            #planet-mars {
+                width: 100px;
+                left: -30px;
+            }
+        }
+        
+        /* New Zero Gravity Float Keyframes */
+        @keyframes zeroGravityFloat1 {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(15px, -20px) scale(1.02); }
+            100% { transform: translate(0, 0) scale(1); }
+        }
+        @keyframes zeroGravityFloat2 {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-10px, 30px) scale(0.98); }
+            100% { transform: translate(0, 0) scale(1); }
+        }
+
+        /* --- NEW NAVIGATION BEAM (STRUCTURAL FIX) --- */
+        .nav-beam {
+            /* FIX: Absolute positioning inside the fixed parent nav */
+            position: absolute; 
+            bottom: 0; 
+            left: 0;
+            width: 100%;
+            height: 2px;
+            z-index: 999; /* Below nav links (1000) */
+            opacity: 0.4;
+            background: linear-gradient(
+                to right, 
+                transparent 0%, 
+                var(--neon-blue) 10%, 
+                var(--neon-purple) 50%, 
+                var(--neon-blue) 90%, 
+                transparent 100%
+            );
+            background-size: 200% 100%; 
+            
+            /* ADDED: Power-up pulse on show */
+            animation: beamMove 20s linear infinite;
+        }
+        
+        /* ADDED: Power-up pulse on show */
+        .main-nav:not(.nav-hidden) .nav-beam {
+            animation: beamMove 20s linear infinite, beamPulse 1.8s ease-out;
+        }
+        
+        /* --- NAVIGATION HOVER GLOWS --- */
+        .nav-links button.nav-link {
+            /* Existing styles preserved */
+            position: relative;
+            overflow: hidden; 
+            transition: color 0.3s ease, text-shadow 0.3s ease;
+        }
+
+        .nav-links button.nav-link:hover,
+        .nav-links button.nav-link.active {
+            color: var(--text-primary);
+            text-shadow: 0 0 10px var(--neon-blue); /* Text glow on hover/active */
+            background-color: transparent;
+        }
+
+        /* Animated Underline (Aura Expand) */
+        .nav-links button.nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%) scaleX(0); /* Start hidden and centered */
+            width: 100%;
+            max-width: 90%;
+            height: 2px;
+            background: linear-gradient(to right, var(--neon-purple), var(--neon-blue));
+            box-shadow: 0 0 8px var(--neon-blue);
+            transition: transform 0.3s ease-out;
+            z-index: 10;
+        }
+
+        .nav-links button.nav-link:hover::after,
+        .nav-links button.nav-link.active::after {
+            transform: translateX(-50%) scaleX(1); /* Expand on hover/active */
+        }
+
+        /* --- MODIFIED: Center Logo Styles --- */
+        /* Clean up old styles for logo-link that is now removed from nav */
+        .nav-links .logo-link {
+            display: none;
+        }
+        .home-text {
+            display: none;
+        }
+        
+        /* --- ROBOT DESIGN SECTION STYLES --- */
+        .robot-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        @media (min-width: 768px) {
+            .robot-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        .robot-card {
+            min-height: 250px;
+            padding: 1.5rem;
+            text-align: left;
+            border-left: 3px solid var(--accent-red);
+            transition: all 0.3s ease;
+        }
+        
+        .robot-card h3 {
+            color: var(--accent-orange);
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 5px rgba(240, 136, 62, 0.5);
+        }
+        
+        .robot-schematic {
+            width: 100%;
+            height: 200px;
+            border: 2px dashed rgba(0, 123, 255, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 1.5rem;
+            font-size: 1.5rem;
+            color: var(--neon-blue);
+            text-shadow: 0 0 10px var(--neon-blue);
+            animation: pulse-glow-line 5s infinite alternate; /* Reuse glow pulse */
+        }
+        
+        /* New Keyframes for Robot Schematic Pulse */
+        @keyframes pulse-glow-line {
+            from { opacity: 0.7; box-shadow: 0 0 10px var(--neon-blue); }
+            to { opacity: 1; box-shadow: 0 0 15px var(--neon-blue); }
+        }
+        
+    </style>
+</head>
+<body>
+
+    <div id="starfield-background">
+        <div id="stars1"></div>
+        <div id="stars2"></div>
+        <div id="stars3"></div>
+    </div>
+    
+    <!-- === NEW PLANETS BACKGROUND ELEMENTS === -->
+    <img src="{{ url_for('static', filename='saturn.png') }}" alt="Floating Saturn" class="cosmic-planet" id="planet-saturn">
+    <img src="{{ url_for('static', filename='mars.png') }}" alt="Floating Mars" class="cosmic-planet" id="planet-mars">
+    
+    <!-- === NAVIGATION BAR (FIXED AND SYNCHRONIZED) === -->
+    <nav class="main-nav">
+        <!-- 
+            
+            VVV   THE FIX IS HERE   VVV
+            The links are now wrapped in left/right groups for visual balancing.
+            
+        -->
+        <div class="nav-links">
+            <div class="nav-group nav-group-left">
+                <button class="nav-link" data-page="page-dashboard">Dashboard</button>
+                <button class="nav-link" data-page="page-mission-briefing">Mission Briefing</button>
+            </div>
+            
+            <button class="nav-link active" data-page="page-home">Home</button>
+            
+            <div class="nav-group nav-group-right">
+                <button class="nav-link" data-page="page-robot">Robot Design</button>
+                <button class="nav-link" data-page="page-team">Team</button>
+            </div>
+        </div>
+        <!-- FIX 4: BEAM IS INSIDE NAV BAR, ABSOLUTELY POSITIONED TO BOTTOM -->
+        <div class="nav-beam"></div> 
+    </nav>
+    <!-- End Navigation Bar -->
+
+    <div class="container">
+        
+        <!-- ================================================== -->
+        <!-- === SECTION 0: HOME (REDESIGNED) === -->
+        <!-- ================================================== -->
+        <section class="page active" id="page-home">
+            
+            <div class="home-layout">
+
+                <!-- 
+            
+                    VVV   THE FIX IS HERE   VVV
+                    The <a> tag and <h2>"Home"</h2> text are removed,
+                    reverting to the original logo-wrapper structure.
+                    The fadeInSlideLeft animation is now back on .logo-wrapper via CSS.
+            
+                -->
+                <!-- Logo with Rotating Aura (Left Slide) -->
+                <div class="logo-wrapper">
+                    <div class="logo-aura"></div>
+                    <img src="static/The_ocd.png" alt="Project ARGUS Logo" class="logo" style="width: 100%; height: 100%; filter: drop-shadow(0 0 20px var(--neon-blue));">
+                </div>
+
+                <!-- Motto & Tagline (Left Slide) -->
+                <header class="cinematic-header text-center">
+                    <p class="home-motto">PROJECT ARGUS: Autonomous Exploration System</p>
+                    <h1 class="home-main-title">"Exploring the unknown with autonomous precision."</h1>
+                    <p class="home-tagline">ARGUS is an intelligent environmental scout built to navigate and explore hazardous terrains.</p>
+                </header>
+
+                <!-- Mission/Vision Panels (Right Slide - Richer Content) -->
+                <div class="mission-vision-grid animated-item" style="animation-delay: 0.8s; opacity: 0;">
+                    
+                    <!-- MISSION DIRECTIVE PANEL -->
+                    <div class="panel directive-panel mission-card">
+                        <div class="home-panel-title">MISSION DIRECTIVE | AI EXPLORATION</div>
+                        <p>
+                            To develop next-generation autonomous exploration systems designed for <strong>hostile or inaccessible environments</strong>. ARGUS integrates real-time sensor fusion, adaptive AI navigation, and environmental analysis to ensure reliability under extreme conditions.
+                        </p>
+                    </div>
+
+                    <!-- SYSTEM VISION PANEL -->
+                    <div class="panel directive-panel vision-card">
+                        <div class="home-panel-title">SYSTEM VISION | FRONTITER ADVANCEMENT</div>
+                        <p>
+                            To merge robotics, AI, and human ingenuity into a unified exploration framework. ARGUS symbolizes the frontier where machine precision meets environmental awareness—advancing scientific discovery, sustainability, and safety for the next era of exploration.
+                        </p>
+                    </div>
+                </div>
+            
+                <!-- Launch Panel (Interactive Component) -->
+                <div id="launch-sequence-panel" class="panel text-center">
+                    <div id="launch-status" class="launch-status">
+                        System Status: READY
+                    </div>
+                    
+                    <button 
+                        class="control-btn launch-btn" 
+                        data-command="GOTO_DASHBOARD" 
+                        data-page="page-dashboard" 
+                        id="launch-dashboard-btn"
+                        onclick="initiateLaunchSequence()"
+                    >
+                        SYSTEM ACTIVATION
+                    </button>
+                </div>
+
+            </div>
+        </section>
+        
+        <!-- ================================================== -->
+        <!-- === SECTION 1: DASHBOARD === -->
+        <!-- ================================================== -->
+        <section class="page" id="page-dashboard">
+            <header class="header animated-item" style="animation-delay: 100ms;">
+                <img src="static/The_ocd.png" alt="Project ARGUS Logo" class="logo">
+                <h1>PROJECT ARGUS</h1>
+                <p class="subtitle">Autonomous Environmental Scout – Live Dashboard</p>
+            </header>
+
+            <div class="panel status-panel animated-item" style="animation-delay: 200ms;">
+                <div class="panel-label">Rover Status</div>
+                <div class="status-display status-INITIALIZING" id="rover-status">
+                    INITIALIZING
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="panel stat-card animated-item" style="animation-delay: 300ms;">
+                    <div class="panel-label">Distance</div>
+                    <div class="value">
+                        <span id="distance-value">0</span>
+                        <span class="unit">cm</span>
+                    </div>
+                </div>
+                
+                <div class="panel stat-card animated-item" style="animation-delay: 400ms;">
+                    <div class="panel-label">Battery Life</div>
+                    <div class="battery-display">
+                        <div class="battery-icon">
+                            <div class="battery-fill" id="battery-fill"></div>
+                        </div>
+                        <div class="battery-value">
+                            <span id="battery-value">0</span>
+                            <span class="unit">%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel mission-control-panel animated-item" style="animation-delay: 500ms;">
+                <div class="panel-label">Mission Control</div>
+                <div class="control-buttons">
+                    <button class="control-btn" data-command="START_MISSION" onclick="sendMissionCommand('START_MISSION')">Start Mission</button>
+                    <button class="control-btn" data-command="PAUSE" onclick="sendMissionCommand('PAUSE')">Pause</button>
+                    <button class="control-btn" data-command="RETURN_HOME" onclick="sendMissionCommand('RETURN_HOME')">Return Home</button>
+                    <button class="control-btn" data-command="SHUTDOWN" onclick="sendMissionCommand('SHUTDOWN')">Shutdown</button>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================================================== -->
+        <!-- === SECTION 2: MISSION BRIEFING === -->
+        <!-- ================================================== -->
+        <section class="page" id="page-mission-briefing">
+    
+            <div class="about-particles">
+                <div class="particle-layer layer-1"></div>
+                <div class="particle-layer layer-2"></div>
+            </div>
+        
+            <div class="panel about-panel animated-item">
+                
+                <h1 class="about-header-glow">About Project ARGUS</h1>
+                
+                <p><strong>Project ARGUS</strong> is a prototype for a next-generation autonomous environmental scout. Designed for exploration and monitoring, its primary mission is to operate in areas too hazardous or inaccessible for human personnel.</p>
+                
+                <p>It utilizes a <strong>dual-processor architecture</strong> for maximum reliability. A Raspberry Pi serves as the high-level "Brain," handling navigation logic and communication, while an Arduino Uno acts as the "Nervous System" for deterministic, real-time motor control and sensor acquisition.</p>
+        
+                <h2 class="telemetry-header-glow">Live Telemetry</h2>
+                
+                <ul class="telemetry-list-glow">
+                    <li>
+                        <strong>Distance</strong>
+                        <span>Measured by the HC-SR04 ultrasonic sensor to provide real-time obstacle avoidance.</span>
+                    </li>
+                    <li>
+                        <strong>Battery Life</strong>
+                        <span>Monitored via a voltage divider circuit to ensure a safe return before power depletion.</span>
+                    </li>
+                </ul>
+            </div>
+        </section>
+        
+        <!-- ================================================== -->
+        <!-- === NEW SECTION 3: ROBOT DESIGN === -->
+        <!-- ================================================== -->
+        <section class="page" id="page-robot">
+            <header class="header">
+                <h1 class="home-main-title">Robot Design & Architecture</h1>
+                <p class="subtitle">Inside the engineering of ARGUS — a fusion of mechanics, intelligence, and precision.</p>
+            </header>
+            
+            <div class="panel">
+                <div class="robot-grid">
+                    
+                    <div class="robot-card panel">
+                        <h3>🧠 Control Systems</h3>
+                        <p>ARGUS operates on a robust <strong>dual-processor architecture</strong>, utilizing a Raspberry Pi for high-level AI navigation and decision-making, seamlessly coordinating with an Arduino Uno for critical, real-time motor control and sensor processing.</p>
+                    </div>
+
+                    <div class="robot-card panel">
+                        <h3>⚙️ Mechanical Framework</h3>
+                        <p>The chassis structure and mechanical assembly were engineered for durability and efficiency in hostile environments. Precise motor control systems translate software commands into stable, reliable physical movement.</p>
+                    </div>
+                    
+                    <div class="robot-card panel">
+                        <h3>🔋 Power & Telemetry</h3>
+                        <p>The <strong>onboard power management</strong> system includes robust battery packs and voltage safety circuits, ensuring the rover operates within defined energy parameters while providing continuous telemetry feedback to the live dashboard.</p>
+                    </div>
+                </div>
+                
+                <div class="robot-schematic">
+                    [ Placeholder: Animated Robot Blueprint Schematic ]
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================================================== -->
+        <!-- === SECTION 4: TEAM === -->
+        <!-- ================================================== -->
+        <section class="page" id="page-team">
+            
+            <div class="panel team-panel animated-item">
+                <h2 class="telemetry-header">Meet The Team</h2>
+                
+                <div class="team-grid">
+                    
+                    <!-- Suad Huseynli -->
+                    <div class="team-member-card">
+                        <h3>Suad Huseynli</h3>
+                        <p>
+                            <strong>Lead Developer & Creative Designer.</strong> Suad spearheaded the website's technical development and artistic direction, ensuring the dashboard is both highly functional and delivers a modern, immersive user experience.
+                        </p>
+                    </div>
+                    
+                    <!-- Mustafa Zeynalli -->
+                    <div class="team-member-card">
+                        <h3>Mustafa Zeynalli</h3>
+                        <p>
+                            <strong>Software Collaborator & Interface Optimizer.</strong> Mustafa contributed key front-end improvements and supported the implementation of interactive components, guaranteeing a refined layout and seamless user-interface performance.
+                        </p>
+                    </div>
+                    
+                    <!-- Farid Mammadov -->
+                    <div class="team-member-card">
+                        <h3>Farid Mammadov</h3>
+                        <p>
+                            <strong>Hardware Communication Engineer.</strong> Farid designed the core robot control logic and integrated the critical communication protocols, enabling the precise interface between the dashboard and the Raspberry Pi/Arduino systems.
+                        </p>
+                    </div>
+
+                    <!-- Turan Hasanzade -->
+                    <div class="team-member-card">
+                        <h3>Turan Hasanzade</h3>
+                        <p>
+                            <strong>Robotics Programmer & Algorithm Specialist.</strong> Turan focused on complex robot programming and algorithm development, ensuring stable system performance and the highly accurate, coordinated movement control of the ARGUS rover.
+                        </p>
+                    </div>
+                    
+                    <!-- Alexei Khovrenkov -->
+                    <div class="team-member-card">
+                        <h3>Alexei Khovrenkov</h3>
+                        <p>
+                            <strong>Presentation & Cross-Team Coordination.</strong> Alexei was vital in structuring the project's external narrative, designing the final presentation, and providing organizational support for documentation and crucial cross-team tasks.
+                        </p>
+                    </div>
+                    
+                    <!-- Khoi Nguyen Hoang -->
+                    <div class="team-member-card">
+                        <h3>Khoi Nguyen Hoang</h3>
+                        <p>
+                            <strong>Mechanical Design & Fabrication Specialist.</strong> Khoi managed all aspects of 3D printing and mechanical assembly, constructing the robot's physical structure and refining its hardware design for maximum efficiency and durability.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+        </section>
+        
+    </div> <!-- /container -->
+
+    <footer class="footer">
+        Project ARGUS | Odyssey 2025 | Team The OCD
+    </footer>
+
+    <div id="toast" class="toast-notification">
+        Command Sent: <span id="toast-message"></span>
+    </div>
+
+
+    <script>
+        // --- Scroll-Aware Nav Bar (FIXED) ---
+        let lastScrollY = 0;
+        let isHidden = false;
+        const mainNav = document.querySelector('.main-nav');
+        
+        window.addEventListener('scroll', () => {
+            const currentScroll = window.scrollY || document.documentElement.scrollTop;
+
+            // Prevent behavior when near top of page (threshold 50px)
+            if (currentScroll <= 50) { 
+                mainNav.classList.remove('nav-hidden');
+                isHidden = false;
+                lastScrollY = currentScroll; // Reset lastScrollY at the top
+                return;
+            }
+
+            // Scrolling down → hide navbar
+            if (currentScroll > lastScrollY && !isHidden) {
+                mainNav.classList.add('nav-hidden');
+                isHidden = true;
+            }
+            // Scrolling up → show navbar (with 10px buffer to prevent flicker)
+            else if (currentScroll < lastScrollY - 10 && isHidden) {
+                mainNav.classList.remove('nav-hidden');
+                isHidden = false;
+            }
+
+            // Update last scroll position
+            lastScrollY = currentScroll;
+        });
+
+        // --- Helper function for updating stat values with an animation ---
+        function updateStat(elementId, newValue, isStatus = false) {
+            // FIX: Only update stats if the parent page is currently active (visible).
+            const el = document.getElementById(elementId);
+            if (!el) return;
+
+            // Check if the stat element's container is active before updating
+            let container = el.closest('.page');
+            if (container && !container.classList.contains('active')) {
+                return; // Skip update if not visible
+            }
+
+            const newValueStr = String(newValue);
+            if (el.innerText !== newValueStr) {
+                el.innerText = newValueStr;
+                el.classList.add('data-flash');
+                
+                if (isStatus) {
+                    el.className = "status-display"; // Reset classes
+                    el.classList.add("status-" + newValueStr); // Add new status class
+                    el.classList.add("data-flash"); // Add animation
+                }
+                
+                setTimeout(() => el.classList.remove('data-flash'), 400);
+            }
+
+            // --- BATTERY ICON LOGIC ---
+            if (elementId === 'battery-value') {
+                const fillEl = document.getElementById('battery-fill');
+                if (fillEl) {
+                    const percentage = Math.max(0, Math.min(100, Number(newValue)));
+                    fillEl.style.width = percentage + '%';
+                    
+                    if (percentage <= 20) {
+                        fillEl.style.backgroundColor = 'var(--accent-red)';
+                    } else if (percentage <= 50) {
+                        fillEl.style.backgroundColor = 'var(--accent-orange)';
+                    } else {
+                        fillEl.style.backgroundColor = 'var(--accent-green)';
+                    }
+                }
+            }
+        }
+
+        // --- Helper function for showing the "Toast" notification ---
+        let toastTimeout;
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            
+            toastMessage.innerText = message;
+            toast.classList.add('show');
+            
+            if (toastTimeout) clearTimeout(toastTimeout);
+            
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+
+        
+        // --- Global function for sending a mission command ---
+        function sendMissionCommand(command) {
+            console.log(`Sending command: ${command}`);
+            
+            fetch('/command', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ command: command }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Server response:', data);
+                if (data.status === 'success') {
+                    showToast(data.message);
+                } else {
+                    showToast(data.message || "Unknown error");
+                }
+            })
+            .catch(error => {
+                console.error('Error sending command:', error);
+                showToast(`TEST MODE: ${command}`);
+                
+                if (typeof mockActive !== 'undefined' && mockActive) {
+                    if (typeof currentCommand !== 'undefined') {
+                         currentCommand = command;
+                    }
+                }
+            });
+        }
+
+
+        // --- Global function to start/stop the data-fetching loop ---
+        let mockData = { state: "INITIALIZING", distance: 99, battery_life: 100 };
+        let distTrend = -1;
+        let mockActive = false;
+        let stateTimer = 0;
+        let currentCommand = "PAUSED"; 
+        let dataIntervalId = null; 
+        let mockIntervalId = null; 
+        
+        function updateMockData() {
+            // Mock logic unchanged (omitted for brevity)
+            if (currentCommand === "START_MISSION") {
+                if (mockData.state === "PAUSED" || mockData.state === "INITIALIZING") { mockData.state = "SCOUTING"; }
+            } else if (currentCommand === "PAUSE") {
+                mockData.state = "PAUSED";
+            } else if (currentCommand === "RETURN_HOME") {
+                mockData.state = "RETURN_HOME";
+            } else if (currentCommand === "SHUTDOWN") {
+                mockData.state = "SHUTDOWN";
+            }
+
+            if (mockData.state === "SCOUTING" || mockData.state === "AVOIDING_OBSTACLE" || mockData.state === "RETURN_HOME") {
+                mockData.battery_life -= 0.05; 
+                if (mockData.battery_life <= 10) {
+                    mockData.battery_life = 10;
+                    mockData.state = "LOW_BATTERY";
+                }
+
+                if (mockData.state !== "LOW_BATTERY") {
+                    if (mockData.state === "SCOUTING") {
+                        mockData.distance += (distTrend * 2);
+                        if (mockData.distance <= 19) {
+                            mockData.distance = 19;
+                            mockData.state = "AVOIDING_OBSTACLE";
+                            distTrend = 1;
+                            stateTimer = 0;
+                        } else if (mockData.distance >= 150) {
+                            mockData.distance = 150;
+                            distTrend = -1;
+                        }
+                    } else if (mockData.state === "AVOIDING_OBSTACLE") {
+                        mockData.distance += (distTrend * 4);
+                        stateTimer++;
+                        if (stateTimer > 3) { mockData.state = "SCOUTING"; distTrend = -1; }
+                    }
+                }
+            }
+            updateStat('rover-status', mockData.state, true);
+            updateStat('distance-value', Math.round(mockData.distance));
+            updateStat('battery-value', Math.round(mockData.battery_life));
+        }
+
+        function startMockDataLoop() {
+            if(mockIntervalId) return; 
+            console.warn("Real server not found or disconnected. Starting MOCK data mode.");
+            mockActive = true;
+            mockIntervalId = setInterval(updateMockData, 1000);
+            updateMockData();
+        }
+
+        function stopDataLoops() {
+            if (dataIntervalId) clearInterval(dataIntervalId);
+            if (mockIntervalId) clearInterval(mockIntervalId);
+            dataIntervalId = null;
+            mockIntervalId = null;
+            console.log("Data loops paused.");
+        }
+        
+        function startDataLoop() {
+            stopDataLoops(); // Clear existing loops first
+            function fetchData() {
+                fetch('/data') 
+                    .then(response => {
+                        if (!response.ok) throw new Error('Network response was not ok');
+                        return response.json();
+                    })
+                    .then(data => {
+                        updateStat('rover-status', data.state, true);
+                        updateStat('distance-value', data.distance);
+                        updateStat('battery-value', data.battery_life);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching data:', error);
+                        updateStat('rover-status', 'DISCONNECTED', true);
+                        if(dataIntervalId) clearInterval(dataIntervalId);
+                        startMockDataLoop();
+                    });
+            }
+
+            fetch('/data') 
+                .then(response => {
+                    if (response.ok) {
+                        console.log("Real server detected. Fetching real data.");
+                        dataIntervalId = setInterval(fetchData, 1000);
+                        fetchData();
+                    } else {
+                        throw new Error("Server responded, but not OK.");
+                    }
+                })
+                .catch(error => {
+                    startMockDataLoop();
+                });
+        }
+        
+        // --- LAUNCH SEQUENCE FUNCTION ---
+        function initiateLaunchSequence() {
+            const button = document.getElementById('launch-dashboard-btn');
+            const statusDiv = document.getElementById('launch-status');
+            
+            button.disabled = true;
+            statusDiv.innerHTML = '<span class="launch-ring"></span> Initializing Systems...';
+            statusDiv.style.color = 'var(--accent-orange)';
+
+            // Simulate boot sequence for 1.5 seconds
+            setTimeout(() => {
+                statusDiv.innerHTML = 'LAUNCH SEQUENCE COMPLETE';
+                statusDiv.style.color = 'var(--accent-green)';
+                
+                // Immediately transition to Dashboard
+                setActivePage('page-dashboard');
+                
+                // Reset button after successful transition (in case user clicks Home again)
+                setTimeout(() => {
+                    button.disabled = false;
+                    statusDiv.innerHTML = 'System Status: READY';
+                    statusDiv.style.color = 'var(--accent-green)';
+                }, 500); 
+
+            }, 1500); 
+        }
+        
+        // --- NEW PARALLAX JS LOGIC ---
+        function applyHomeParallax() {
+            const homeSection = document.getElementById('page-home');
+            const saturn = document.getElementById('planet-saturn');
+            const mars = document.getElementById('planet-mars');
+            
+            if (!homeSection) return; 
+
+            function handleMouseMove(e) {
+                // Check if we are on the Home page (or any page using parallax)
+                const isHomeActive = homeSection.classList.contains('active');
+
+                if (!isHomeActive) {
+                    // Stop further processing if not active
+                    return;
+                }
+                
+                const rect = homeSection.getBoundingClientRect();
+                
+                // Normalize mouse position to [-1, 1] relative to center
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                
+                const moveX = (e.clientX - centerX) / (rect.width / 2);
+                const moveY = (e.clientY - centerY) / (rect.height / 2);
+                                        
+                // Planets (deep background layer)
+                // Note: The zeroGravityFloat animation is additive to the parallax effect.
+                if (saturn) {
+                    saturn.style.transform = `translate3d(${moveX * 8}px, ${moveY * 8}px, 0)`;
+                }
+                if (mars) {
+                    mars.style.transform = `translate3d(${-moveX * 5}px, ${-moveY * 5}px, 0)`;
+                }
+            }
+
+            // Global listener on the window to track mouse movement anywhere
+            window.addEventListener('mousemove', handleMouseMove);
+            
+            // Re-apply initial position on mouse exit (or page switch)
+            window.addEventListener('mouseleave', () => {
+                 if (saturn) saturn.style.transform = 'translate3d(0, 0, 0)';
+                 if (mars) mars.style.transform = 'translate3d(0, 0, 0)';
+            });
+            
+            // Re-apply initial position when parallax should stop
+            document.querySelectorAll('.page').forEach(page => {
+                page.addEventListener('transitionend', () => {
+                    // Only reset planets if the page is NOT home/active, letting the CSS animation run.
+                    if (page.id !== 'page-home' || !page.classList.contains('active')) {
+                        if (saturn) saturn.style.transform = ''; // Clear inline style to let CSS animation run
+                        if (mars) mars.style.transform = '';
+                    }
+                });
+            });
+        }
+        // --- END NEW PARALLAX JS LOGIC ---
+
+        // --- PAGE SWITCHING LOGIC (FIXED) ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const navLinks = document.querySelectorAll('.nav-link');
+            const pages = document.querySelectorAll('.page');
+            
+            const defaultPageId = 'page-home'; 
+            
+            console.log("DOM loaded. Initializing page switcher.");
+            
+            // Run parallax initialization when the DOM is ready
+            applyHomeParallax();
+
+            // Function to set active page
+            function setActivePage(pageId) {
+                console.log(`Attempting to switch to: ${pageId}`);
+
+                // 1. Deactivate all nav links and start deactivation of sections
+                navLinks.forEach(nav => nav.classList.remove('active'));
+                
+                pages.forEach(page => page.classList.remove('active')); 
+
+                // 2. Activate the new page and link
+                const newPage = document.getElementById(pageId);
+                // MODIFIED: Find the link for 'home' on the page as well as the nav
+                const newLink = document.querySelector(`.nav-link[data-page="${pageId}"]`);
+                
+                if (newPage) {
+                    newPage.classList.add('active');
+                } else {
+                     console.error(`ERROR: Target page not found for ID: ${pageId}`);
+                }
+                
+                if (newLink) {
+                    console.log(`Activating page: ${pageId}. Element exists.`);
+                    
+                    newLink.classList.add('active');
+                    console.log(`Page ${pageId} successfully activated.`);
+                    
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                } else {
+                    // This is fine if we just clicked the "Home" link, as there is no nav button
+                    if(pageId !== 'page-home') {
+                        console.error(`ERROR: Target link not found for ID: ${pageId}`);
+                    }
+                }
+
+                // 3. Control Data Loops
+                if (pageId === 'page-dashboard') {
+                    startDataLoop();
+                } else {
+                    stopDataLoops();
+                }
+            }
+
+            // Event listener for navigation buttons
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    const pageId = link.getAttribute('data-page');
+                    
+                    // FIX: Handle the 'Proceed to Dashboard' button click
+                    if (link.dataset.command === 'GOTO_DASHBOARD') {
+                        // If clicking a main nav link, just switch the page without the launch animation
+                        setActivePage('page-dashboard');
+                    } else {
+                        setActivePage(pageId);
+                    }
+                });
+            });
+
+            // Set the default page on load
+            setActivePage(defaultPageId);
+            
+            /* REMOVED: Manual activation for .home-logo-link */
+        });
+        
+    </script>
+
+</body>
+</html>
+
+
+
